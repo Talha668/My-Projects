@@ -40,6 +40,7 @@ def clear_field():
 
 root = tk.Tk()
 root.geometry("300x275")
+root.title("Calculator")
 
 text_result = tk.Text(root, height=2, width=16, font=("Arial", 24))
 text_result.grid(columnspan=5)
@@ -80,4 +81,5 @@ btn_clear.grid(row=6, column=1, columnspan=2)
 btn_equals = tk.Button(root, text="=", command=evaluate_calculation, width=11, font=("Arial", 14))
 btn_equals.grid(row=6, column=3, columnspan=2)
 root.mainloop()
+
 
