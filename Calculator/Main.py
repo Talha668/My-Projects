@@ -50,7 +50,7 @@ btn_2 = tk.Button(root, text="2", command=lambda: add_to_calculation(2), width=5
 btn_2.grid(row=2, column=2)
 btn_3 = tk.Button(root, text="3", command=lambda: add_to_calculation(3), width=5, font=("Arial", 14))
 btn_3.grid(row=2, column=3)
-btn_4 = tk.Button(root, text="4", command=lambda: add_to_calculation(4), width=5, font=("Aerial", 14))
+btn_4 = tk.Button(root, text="4", command=lambda: add_to_calculation(4), width=5, font=("Arial", 14))
 btn_4.grid(row=3, column=1)
 btn_5 = tk.Button(root, text="5", command=lambda: add_to_calculation(5), width=5, font=("Arial", 14))
 btn_5.grid(row=3, column=2)
@@ -76,10 +76,11 @@ btn_open = tk.Button(root, text="(", command=lambda: add_to_calculation("("), wi
 btn_open.grid(row=5, column=1)
 btn_close = tk.Button(root, text=")", command=lambda: add_to_calculation(")"), width=5, font=("Arial", 14))
 btn_close.grid(row=5, column=3)
-btn_clear = tk.Button(root, text="c", command=clear_field, width=11, font=("Arial", 14))
+btn_clear = tk.Button(root, text="C", command=clear_field, width=11, font=("Arial", 14))
 btn_clear.grid(row=6, column=1, columnspan=2)
 btn_equals = tk.Button(root, text="=", command=evaluate_calculation, width=11, font=("Arial", 14))
 btn_equals.grid(row=6, column=3, columnspan=2)
 root.mainloop()
+
 
 
