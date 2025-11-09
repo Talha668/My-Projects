@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management - Restaurant System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-utensils"></i> Restaurant Manager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="nav-link" href="{% url 'menu_management' %}">Menu</a>
+                <a class="nav-link active" href="{% url 'order_management' %}">Orders</a>
+                <a class="nav-link" href="{% url 'table_management' %}">Tables</a>
+                <a class="nav-link" href="{% url 'reservation_management' %}">Reservations</a>
+                <a class="nav-link" href="{% url 'inventory_management' %}">Inventory</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-receipt"></i> Order Management</h2>
+            <a href="{% url 'create_order' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Order
+            </a>
+        </div>
+
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Table</th>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Total Amount</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><strong>{{ order.order_number }}</strong></td>
+                        <td>{{ order.table_number }}</td>
+                        <td>{{ order.customer_name|default:"Walk-in" }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if order.status == 'pending' %}bg-secondary
+                                {% elif order.status == 'confirmed' %}bg-primary
+                                {% elif order.status == 'preparing' %}bg-warning
+                                {% elif order.status == 'ready' %}bg-info
+                                {% elif order.status == 'served' %}bg-success
+                                {% elif order.status == 'paid' %}bg-success
+                                {% else %}bg-danger{% endif %}">
+                                {{ order.status|title }}
+                            </span>
+                        </td>
+                        <td>${{ order.total_amount }}</td>
+                        <td>{{ order.created_at }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" title="View Order" onclick="viewOrder({{ order.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-success" title="Mark as Paid" onclick="markOrderPaid({{ order.id }})">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" title="Cancel Order" onclick="cancelOrder({{ order.id }})">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-2x mb-3"></i>
+            <h4>No Orders Found</h4>
+            <p>There are no orders in the system yet. Create your first order to get started.</p>
+            <a href="{% url 'create_order' %}" class="btn btn-primary">Create First Order</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Minimal JavaScript for Order Actions -->
+    <script>
+    // Function to view order details
+    function viewOrder(orderId) {
+        window.location.href = '/orders/' + orderId + '/';
+    }
+    
+    // Function to mark order as paid
+    function markOrderPaid(orderId) {
+        if (confirm('Are you sure you want to mark this order as paid?')) {
+            // Create a form to submit to Django
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/orders/' + orderId + '/update-status/';
+            
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = getCookie('csrftoken');
+            form.appendChild(csrfInput);
+            
+            // Add status field
+            const statusInput = document.createElement('input');
+            statusInput.type = 'hidden';
+            statusInput.name = 'status';
+            statusInput.value = 'paid';
+            form.appendChild(statusInput);
+            
+            // Submit the form
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // Function to cancel order
+    function cancelOrder(orderId) {
+        if (confirm('Are you sure you want to cancel this order?')) {
+            // Create a form to submit to Django
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/orders/' + orderId + '/update-status/';
+            
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = getCookie('csrftoken');
+            form.appendChild(csrfInput);
+            
+            // Add status field
+            const statusInput = document.createElement('input');
+            statusInput.type = 'hidden';
+            statusInput.name = 'status';
+            statusInput.value = 'cancelled';
+            form.appendChild(statusInput);
+            
+            // Submit the form
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // CSRF token helper function
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    </script>
+</body>
+</html>

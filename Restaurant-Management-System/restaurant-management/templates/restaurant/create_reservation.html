@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Reservation - Restaurant System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-utensils"></i> Restaurant Manager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="nav-link" href="{% url 'reservation_management' %}">Reservations</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="fas fa-plus-circle"></i> Create New Reservation</h2>
+                <a href="{% url 'reservation_management' %}" class="btn btn-secondary mb-3">
+                    <i class="fas fa-arrow-left"></i> Back to Reservations
+                </a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Reservation Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <!-- Customer Information -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="customer_name" class="form-label">Customer Name *</label>
+                                    <input type="text" class="form-control" id="customer_name" name="customer_name" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="customer_phone" class="form-label">Phone Number *</label>
+                                    <input type="tel" class="form-control" id="customer_phone" name="customer_phone" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="customer_email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="customer_email" name="customer_email">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="party_size" class="form-label">Party Size *</label>
+                                    <input type="number" class="form-control" id="party_size" name="party_size" 
+                                           min="1" max="20" value="2" required>
+                                    <div class="form-text">Number of persons</div>
+                                </div>
+                            </div>
+
+                            <!-- Reservation Details -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="reservation_date" class="form-label">Reservation Date *</label>
+                                    <input type="date" class="form-control" id="reservation_date" name="reservation_date" 
+                                           min="{{ min_date }}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="reservation_time" class="form-label">Reservation Time *</label>
+                                    <input type="time" class="form-control" id="reservation_time" name="reservation_time" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="table" class="form-label">Select Table *</label>
+                                    <select class="form-select" id="table" name="table" required>
+                                        <option value="">Choose a table...</option>
+                                        {% for table in tables %}
+                                        <option value="{{ table.id }}" 
+                                                data-capacity="{{ table.capacity }}"
+                                                data-location="{{ table.location }}">
+                                            Table {{ table.table_number }} ({{ table.capacity }} persons) - {{ table.location }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text">Only available tables are shown</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Table Information</label>
+                                    <div id="tableInfo" class="p-3 bg-light rounded">
+                                        <small class="text-muted">Select a table to see details</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="special_requests" class="form-label">Special Requests</label>
+                                <textarea class="form-control" id="special_requests" name="special_requests" rows="3" 
+                                          placeholder="Any special requirements or notes..."></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'reservation_management' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Create Reservation
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tableSelect = document.getElementById('table');
+        const tableInfo = document.getElementById('tableInfo');
+        const partySizeInput = document.getElementById('party_size');
+        
+        // Update table information when selection changes
+        tableSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                const capacity = selectedOption.getAttribute('data-capacity');
+                const location = selectedOption.getAttribute('data-location');
+                
+                tableInfo.innerHTML = `
+                    <h6>Table Details</h6>
+                    <p><strong>Capacity:</strong> ${capacity} persons</p>
+                    <p><strong>Location:</strong> ${location}</p>
+                    <p><strong>Status:</strong> <span class="badge bg-success">Available</span></p>
+                `;
+                
+                // Update party size max value based on table capacity
+                partySizeInput.max = capacity;
+                if (parseInt(partySizeInput.value) > parseInt(capacity)) {
+                    partySizeInput.value = capacity;
+                    alert(`This table can only accommodate ${capacity} persons. Party size adjusted.`);
+                }
+            } else {
+                tableInfo.innerHTML = '<small class="text-muted">Select a table to see details</small>';
+            }
+        });
+        
+        // Validate party size against table capacity
+        partySizeInput.addEventListener('change', function() {
+            const selectedOption = tableSelect.options[tableSelect.selectedIndex];
+            if (selectedOption.value) {
+                const capacity = selectedOption.getAttribute('data-capacity');
+                if (parseInt(this.value) > parseInt(capacity)) {
+                    alert(`This table can only accommodate ${capacity} persons. Please select a larger table or reduce party size.`);
+                    this.value = capacity;
+                }
+            }
+        });
+        
+        // Set minimum time to current time if date is today
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('reservation_date');
+        const timeInput = document.getElementById('reservation_time');
+        
+        dateInput.addEventListener('change', function() {
+            if (this.value === today) {
+                const now = new Date();
+                const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                timeInput.min = currentTime;
+            } else {
+                timeInput.removeAttribute('min');
+            }
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Management - Restaurant System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Bar - Moved outside container like other templates -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-utensils"></i> Restaurant Manager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="nav-link" href="{% url 'menu_management' %}">Menu</a>
+                <a class="nav-link" href="{% url 'order_management' %}">Orders</a>
+                <a class="nav-link active" href="{% url 'table_management' %}">Tables</a>
+                <a class="nav-link" href="{% url 'reservation_management' %}">Reservations</a>
+                <a class="nav-link" href="{% url 'inventory_management' %}">Inventory</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Message display section -->
+        {% if messages %}
+        <div class="messages mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-chair"></i> Table Management</h2>
+            <button class="btn btn-primary" onclick="addNewTable()">
+                <i class="fas fa-plus"></i> Add Table
+            </button>
+        </div>
+
+        {% if tables %}
+        <div class="row">
+            {% for table in tables %}
+            <div class="col-md-3 mb-4">
+                <div class="card 
+                    {% if table.status == 'available' %}border-success
+                    {% elif table.status == 'occupied' %}border-danger
+                    {% elif table.status == 'reserved' %}border-warning
+                    {% else %}border-secondary{% endif %}">
+                    
+                    <div class="card-body text-center">
+                        <h3 class="card-title">Table {{ table.table_number }}</h3>
+                        <p class="card-text">
+                            <i class="fas fa-users"></i> Capacity: {{ table.capacity }} persons
+                        </p>
+                        <p class="card-text">
+                            <i class="fas fa-map-marker-alt"></i> {{ table.location }}
+                        </p>
+                        <p class="card-text">
+                            <span class="badge 
+                                {% if table.status == 'available' %}bg-success
+                                {% elif table.status == 'occupied' %}bg-danger
+                                {% elif table.status == 'reserved' %}bg-warning
+                                {% else %}bg-secondary{% endif %}">
+                                <i class="fas 
+                                    {% if table.status == 'available' %}fa-check-circle
+                                    {% elif table.status == 'occupied' %}fa-times-circle
+                                    {% elif table.status == 'reserved' %}fa-clock
+                                    {% else %}fa-tools{% endif %}"></i>
+                                {{ table.status|title }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Updated Button Group -->
+                    <div class="card-footer">
+                        <div class="btn-group w-100">
+                            <button class="btn btn-outline-primary btn-sm" onclick="editTable({{ table.id }})">Edit</button>
+                            <button class="btn btn-outline-secondary btn-sm" 
+                                    data-table-id="{{ table.id }}"
+                                    data-current-status="{{ table.status }}"
+                                    data-table-number="{{ table.table_number }}"
+                                    onclick="changeTableStatus(this)">Status</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-2x mb-3"></i>
+            <h4>No Tables Found</h4>
+            <p>There are no tables configured in the system. Add tables to start managing your restaurant.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- JavaScript for Table Actions -->
+    <script>
+    // Function to add new table
+    function addNewTable() {
+        window.location.href = '/tables/add/';
+    }
+
+    // Function to edit table
+    function editTable(tableId) {
+        window.location.href = '/tables/' + tableId + '/edit/';
+    }
+
+    // Function to change table status using data attributes
+    function changeTableStatus(button) {
+        const tableId = button.getAttribute('data-table-id');
+        const currentStatus = button.getAttribute('data-current-status');
+        const tableNumber = button.getAttribute('data-table-number');
+        
+        const statusOptions = [
+            {value: 'available', label: 'Available', badge: 'success', description: 'Table is ready for customers'},
+            {value: 'occupied', label: 'Occupied', badge: 'danger', description: 'Table is currently in use'},
+            {value: 'reserved', label: 'Reserved', badge: 'warning', description: 'Table is reserved for future use'},
+            {value: 'maintenance', label: 'Maintenance', badge: 'secondary', description: 'Table is under maintenance'}
+        ];
+        
+        // Create a more user-friendly prompt
+        let statusText = `Change Status for Table ${tableNumber}\n\n`;
+        statusText += `Current Status: ${currentStatus}\n\n`;
+        statusText += `Select new status:\n`;
+        
+        statusOptions.forEach((option, index) => {
+            statusText += `${index + 1}. ${option.label} - ${option.description}\n`;
+        });
+        
+        const userInput = prompt(statusText + '\nEnter number (1-4):');
+        
+        if (userInput !== null && userInput !== '') {
+            const statusIndex = parseInt(userInput) - 1;
+            
+            if (statusIndex >= 0 && statusIndex < statusOptions.length) {
+                const selectedStatus = statusOptions[statusIndex];
+                
+                // Submit the status change
+                submitTableStatus(tableId, selectedStatus.value);
+            } else {
+                alert('Please enter a valid number between 1 and 4.');
+            }
+        }
+    }
+
+    // Separate function to handle the form submission
+    function submitTableStatus(tableId, newStatus) {
+        // Create a form to submit to Django
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/tables/${tableId}/update-status/`;
+        
+        // Add CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = getCookie('csrftoken');
+        form.appendChild(csrfInput);
+        
+        // Add status field
+        const statusInput = document.createElement('input');
+        statusInput.type = 'hidden';
+        statusInput.name = 'status';
+        statusInput.value = newStatus;
+        form.appendChild(statusInput);
+        
+        // Submit the form
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    // CSRF token helper function
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    </script>
+</body>
+</html>

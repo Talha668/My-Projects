@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Management - Restaurant System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-utensils"></i> Restaurant Manager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="nav-link active" href="{% url 'menu_management' %}">Menu</a>
+                <a class="nav-link" href="{% url 'order_management' %}">Orders</a>
+                <a class="nav-link" href="{% url 'table_management' %}">Tables</a>
+                <a class="nav-link" href="{% url 'reservation_management' %}">Reservations</a>
+                <a class="nav-link" href="{% url 'inventory_management' %}">Inventory</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-book"></i> Menu Management</h2>
+            <a href="{% url 'add_menu_item' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Menu Item
+            </a>
+        </div>
+
+        {% if menu_items %}
+        <div class="row">
+            {% for item in menu_items %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    {% if item.image %}
+                    <img src="{{ item.image }}" class="card-img-top" alt="{{ item.name }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                        <i class="fas fa-utensils fa-3x text-muted"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ item.name }}</h5>
+                        <p class="card-text text-muted">{{ item.description }}</p>
+                        <p class="card-text"><strong>Price: ${{ item.price }}</strong></p>
+                        <p class="card-text">
+                            <span class="badge {% if item.is_available %}bg-success{% else %}bg-danger{% endif %}" 
+                                  onclick="toggleAvailability({{ item.id }}, {{ item.is_available|lower }}, '{{ item.name }}')"
+                                  style="cursor: pointer;">
+                                {% if item.is_available %}Available{% else %}Unavailable{% endif %}
+                            </span>
+                            <span class="badge bg-secondary">{{ item.category.name }}</span>
+                        </p>
+                        <p class="card-text"><small>Prep time: {{ item.preparation_time }} mins</small></p>
+                    </div>
+                    <div class="card-footer">
+                        <div class="btn-group w-100">
+                            <button class="btn btn-outline-primary btn-sm" onclick="editMenuItem({{ item.id }})">Edit</button>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteMenuItem({{ item.id }}, '{{ item.name }}')">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> No menu items found. Add your first menu item to get started.
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Complete JavaScript for Menu Actions -->
+    <script>
+    // Function to edit menu item - redirects to edit page
+    function editMenuItem(itemId) {
+        window.location.href = '/menu/' + itemId + '/edit/';
+    }
+    
+    // Function to delete menu item
+    function deleteMenuItem(itemId, itemName) {
+        if (confirm('Are you sure you want to delete "' + itemName + '" from the menu?\n\nThis action cannot be undone.')) {
+            // Create a form to submit to Django
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/menu/' + itemId + '/delete/';
+            
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = getCookie('csrftoken');
+            form.appendChild(csrfInput);
+            
+            // Submit the form
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // Function to toggle menu item availability
+    function toggleAvailability(itemId, currentStatus, itemName) {
+        const newStatus = !currentStatus;
+        const action = newStatus ? 'enable' : 'disable';
+        
+        if (confirm('Are you sure you want to ' + action + ' "' + itemName + '"?')) {
+            // Create a form to submit to Django
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/menu/' + itemId + '/toggle-availability/';
+            
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = getCookie('csrftoken');
+            form.appendChild(csrfInput);
+            
+            // Submit the form
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    
+    // CSRF token helper function
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    </script>
+</body>
+</html>

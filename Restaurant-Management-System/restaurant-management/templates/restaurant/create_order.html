@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Order - Restaurant System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .order-item { border: 1px solid #dee2e6; border-radius: 5px; padding: 15px; margin-bottom: 10px; }
+        .order-item:hover { background-color: #f8f9fa; }
+        .quantity-input { width: 80px; }
+        #orderSummary { position: sticky; top: 20px; }
+        .menu-item-card { cursor: pointer; transition: all 0.3s ease; }
+        .menu-item-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-utensils"></i> Restaurant Manager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+                <a class="nav-link" href="{% url 'menu_management' %}">Menu</a>
+                <a class="nav-link active" href="{% url 'order_management' %}">Orders</a>
+                <a class="nav-link" href="{% url 'table_management' %}">Tables</a>
+                <a class="nav-link" href="{% url 'reservation_management' %}">Reservations</a>
+                <a class="nav-link" href="{% url 'inventory_management' %}">Inventory</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="fas fa-plus-circle"></i> Create New Order</h2>
+                <p class="text-muted">Create a new order for a customer</p>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Order Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" id="orderForm">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="table" class="form-label">Select Table *</label>
+                                    <select class="form-select" id="table" name="table" required>
+                                        <option value="">Choose a table...</option>
+                                        {% for table in tables %}
+                                        <option value="{{ table.id }}">Table {{ table.table_number }} ({{ table.capacity }} persons) - {{ table.status|title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="customer_name" class="form-label">Customer Name</label>
+                                    <input type="text" class="form-control" id="customer_name" name="customer_name" placeholder="Enter customer name (optional)">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Order Items *</label>
+                                <div id="orderItemsContainer">
+                                    <div class="text-muted text-center p-3 border rounded" id="noItemsMessage">
+                                        <i class="fas fa-shopping-cart fa-2x mb-2"></i><br>
+                                        No items added yet. Select items from the menu.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Order Notes</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any special instructions or notes..."></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'order_management' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left"></i> Back to Orders
+                                </a>
+                                <button type="submit" class="btn btn-primary" id="submitOrder">
+                                    <i class="fas fa-check"></i> Create Order
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Available Menu Items -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Available Menu Items</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if menu_items %}
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            {% for item in menu_items %}
+                            <div class="card menu-item-card mb-2 p-2" 
+                                 onclick="addOrderItem('{{ item.id }}', '{{ item.name|escapejs }}', {{ item.price }})">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">{{ item.name }}</h6>
+                                        <p class="mb-1 small text-muted">{{ item.description|truncatewords:8 }}</p>
+                                        <span class="fw-bold text-success">${{ item.price }}</span>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-success">Available</span>
+                                        <div class="mt-1">
+                                            <button type="button" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-plus"></i> Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-utensils fa-2x mb-2"></i>
+                            <p>No menu items available.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="card" id="orderSummary">
+                    <div class="card-header">
+                        <h5>Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="summaryContent">
+                            <p class="text-muted">No items in order</p>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between">
+                            <strong>Total:</strong>
+                            <strong id="orderTotal">$0.00</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    let orderItems = [];
+    let orderTotal = 0;
+
+    function addOrderItem(itemId, itemName, itemPrice) {
+        // Check if item already exists
+        const existingItemIndex = orderItems.findIndex(item => item.id === itemId);
+        
+        if (existingItemIndex > -1) {
+            // Increase quantity of existing item
+            orderItems[existingItemIndex].quantity += 1;
+        } else {
+            // Add new item
+            orderItems.push({
+                id: itemId,
+                name: itemName,
+                price: parseFloat(itemPrice),
+                quantity: 1,
+                instructions: ''
+            });
+        }
+        
+        updateOrderDisplay();
+        updateOrderSummary();
+    }
+
+    function removeOrderItem(index) {
+        orderItems.splice(index, 1);
+        updateOrderDisplay();
+        updateOrderSummary();
+    }
+
+    function updateOrderDisplay() {
+        const container = document.getElementById('orderItemsContainer');
+        
+        if (orderItems.length === 0) {
+            container.innerHTML = `
+                <div class="text-muted text-center p-3 border rounded" id="noItemsMessage">
+                    <i class="fas fa-shopping-cart fa-2x mb-2"></i><br>
+                    No items added yet. Select items from the menu.
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        orderItems.forEach((item, index) => {
+            html += `
+            <div class="order-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1">${item.name}</h6>
+                        <p class="mb-1 text-muted small">$${item.price.toFixed(2)} each</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeOrderItem(${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="row mt-2">
+                    <div class="col-md-6">
+                        <label class="form-label small">Quantity</label>
+                        <input type="number" 
+                               class="form-control form-control-sm quantity-input" 
+                               name="quantities" 
+                               value="${item.quantity}" 
+                               min="1" 
+                               onchange="updateItemQuantity(${index}, this.value)">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Special Instructions</label>
+                        <input type="text" 
+                               class="form-control form-control-sm" 
+                               name="instructions" 
+                               placeholder="Optional"
+                               onchange="updateItemInstructions(${index}, this.value)"
+                               value="${item.instructions}">
+                    </div>
+                </div>
+                
+                <input type="hidden" name="menu_items" value="${item.id}">
+            </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    }
+
+    function updateItemQuantity(index, quantity) {
+        if (quantity > 0) {
+            orderItems[index].quantity = parseInt(quantity);
+            updateOrderSummary();
+        }
+    }
+
+    function updateItemInstructions(index, instructions) {
+        orderItems[index].instructions = instructions;
+    }
+
+    function updateOrderSummary() {
+        const summaryContent = document.getElementById('summaryContent');
+        const orderTotalElement = document.getElementById('orderTotal');
+        
+        orderTotal = orderItems.reduce((total, item) => {
+            return total + (item.price * item.quantity);
+        }, 0);
+        
+        if (orderItems.length === 0) {
+            summaryContent.innerHTML = '<p class="text-muted">No items in order</p>';
+            orderTotalElement.textContent = '$0.00';
+            return;
+        }
+        
+        let html = '';
+        orderItems.forEach(item => {
+            const subtotal = item.price * item.quantity;
+            html += `
+            <div class="d-flex justify-content-between small mb-2">
+                <span>${item.quantity}x ${item.name}</span>
+                <span>$${subtotal.toFixed(2)}</span>
+            </div>
+            `;
+        });
+        
+        summaryContent.innerHTML = html;
+        orderTotalElement.textContent = `$${orderTotal.toFixed(2)}`;
+    }
+
+    // Form validation before submission
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+        if (orderItems.length === 0) {
+            e.preventDefault();
+            alert('Please add at least one item to the order.');
+            return;
+        }
+        
+        if (!document.getElementById('table').value) {
+            e.preventDefault();
+            alert('Please select a table for the order.');
+            return;
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Table - Restaurant System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-utensils"></i> Restaurant Manager
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2><i class="fas fa-edit"></i> Edit Table: {{ table.table_number }}</h2>
+                <a href="{% url 'table_management' %}" class="btn btn-secondary mb-3">
+                    <i class="fas fa-arrow-left"></i> Back to Tables
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Table Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="mb-3">
+                                <label for="table_number" class="form-label">Table Number *</label>
+                                <input type="text" class="form-control" id="table_number" name="table_number" value="{{ table.table_number }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="capacity" class="form-label">Capacity *</label>
+                                <input type="number" class="form-control" id="capacity" name="capacity" value="{{ table.capacity }}" min="1" max="20" required>
+                                <div class="form-text">Number of persons this table can seat</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="location" class="form-label">Location</label>
+                                <select class="form-select" id="location" name="location">
+                                    <option value="Main Hall" {% if table.location == "Main Hall" %}selected{% endif %}>Main Hall</option>
+                                    <option value="Terrace" {% if table.location == "Terrace" %}selected{% endif %}>Terrace</option>
+                                    <option value="Private Room" {% if table.location == "Private Room" %}selected{% endif %}>Private Room</option>
+                                    <option value="Garden" {% if table.location == "Garden" %}selected{% endif %}>Garden</option>
+                                    <option value="Bar Area" {% if table.location == "Bar Area" %}selected{% endif %}>Bar Area</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Current Status</label>
+                                <p>
+                                    <span class="badge 
+                                        {% if table.status == 'available' %}bg-success
+                                        {% elif table.status == 'occupied' %}bg-danger
+                                        {% elif table.status == 'reserved' %}bg-warning
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ table.status|title }}
+                                    </span>
+                                </p>
+                                <div class="form-text">Use the Status button on the main page to change table status</div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'table_management' %}" class="btn btn-secondary">Cancel</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Update Table
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

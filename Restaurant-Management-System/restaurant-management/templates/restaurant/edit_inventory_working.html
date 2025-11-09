@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Inventory - WORKING</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, select { padding: 8px; width: 300px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>✏️ Edit Inventory Item</h1>
+    
+    <!-- Debug Info -->
+    <div style="background: #f8f9fa; padding: 15px; margin-bottom: 20px; border-left: 4px solid #007bff;">
+        <h3>Debug Information:</h3>
+        <p><strong>Item ID:</strong> {{ item.id }}</p>
+        <p><strong>Item Name:</strong> {{ item.item_name }}</p>
+        <p><strong>Current Stock:</strong> {{ item.current_stock }}</p>
+        <p><strong>Template Loaded:</strong> ✅ SUCCESS</p>
+    </div>
+
+    {% if messages %}
+    <div style="background: #d4edda; padding: 10px; margin-bottom: 15px; border-left: 4px solid #28a745;">
+        <h4>Messages:</h4>
+        {% for message in messages %}
+        <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="item_name">Item Name:</label>
+            <input type="text" id="item_name" name="item_name" value="{{ item.item_name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="category">Category:</label>
+            <select id="category" name="category" required>
+                <option value="vegetables" {% if item.category == 'vegetables' %}selected{% endif %}>Vegetables</option>
+                <option value="fruits" {% if item.category == 'fruits' %}selected{% endif %}>Fruits</option>
+                <option value="meat" {% if item.category == 'meat' %}selected{% endif %}>Meat</option>
+                <option value="dairy" {% if item.category == 'dairy' %}selected{% endif %}>Dairy</option>
+                <option value="beverages" {% if item.category == 'beverages' %}selected{% endif %}>Beverages</option>
+                <option value="other" {% if item.category == 'other' %}selected{% endif %}>Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="current_stock">Current Stock:</label>
+            <input type="number" id="current_stock" name="current_stock" value="{{ item.current_stock }}" step="0.01" min="0" required>
+        </div>
+
+        <div class="form-group">
+            <label for="minimum_stock">Minimum Stock:</label>
+            <input type="number" id="minimum_stock" name="minimum_stock" value="{{ item.minimum_stock }}" step="0.01" min="0" required>
+        </div>
+
+        <div class="form-group">
+            <label for="unit">Unit:</label>
+            <select id="unit" name="unit" required>
+                <option value="kg" {% if item.unit == 'kg' %}selected{% endif %}>Kilogram (kg)</option>
+                <option value="g" {% if item.unit == 'g' %}selected{% endif %}>Gram (g)</option>
+                <option value="piece" {% if item.unit == 'piece' %}selected{% endif %}>Piece</option>
+                <option value="pack" {% if item.unit == 'pack' %}selected{% endif %}>Pack</option>
+                <option value="bottle" {% if item.unit == 'bottle' %}selected{% endif %}>Bottle</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="cost_per_unit">Cost Per Unit ($):</label>
+            <input type="number" id="cost_per_unit" name="cost_per_unit" value="{{ item.cost_per_unit }}" step="0.01" min="0" required>
+        </div>
+
+        <button type="submit">💾 Update Item</button>
+        <a href="/inventory/" style="margin-left: 10px; text-decoration: none;">❌ Cancel</a>
+    </form>
+
+    <hr>
+    <div style="margin-top: 20px; font-size: 12px; color: #666;">
+        <p><strong>Template:</strong> edit_inventory_working.html</p>
+        <p><strong>If you can see this, the template is working! 🎉</strong></p>
+    </div>
+</body>
+</html>
