@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h3 class="card-title mb-0">
+                    <i class="fas fa-user-plus"></i> Register for {{ event.title }}
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h5>Event Details:</h5>
+                    <p><strong>Date:</strong> {{ event.date|date:"F d, Y H:i" }}</p>
+                    <p><strong>Location:</strong> {{ event.location }}</p>
+                    <p><strong>Available Spots:</strong> {{ event.available_spots }}</p>
+                    <p><strong>Your Name:</strong> {{ user.get_full_name|default:user.username }}</p>
+                    <p><strong>Your Email:</strong> {{ user.email }}</p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        By registering, you confirm your attendance for this event.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'event-detail' event.pk %}" class="btn btn-secondary me-md-2">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Confirm Registration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

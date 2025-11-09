@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h3 class="card-title mb-0 text-center">Logged Out</h3>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-sign-out-alt fa-4x text-info"></i>
+                </div>
+                <h4>You have been successfully logged out!</h4>
+                <p class="text-muted">Thank you for using our Event Registration System.</p>
+                
+                <div class="mt-4">
+                    <a href="{% url 'login' %}" class="btn btn-primary me-2">
+                        <i class="fas fa-sign-in-alt"></i> Login Again
+                    </a>
+                    <a href="{% url 'event-list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

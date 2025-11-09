@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h2 class="card-title mb-0">{{ event.title }}</h2>
+                <span class="badge bg-light text-dark">{{ event.get_event_type_display }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-calendar text-primary"></i> Date & Time</h5>
+                        <p>{{ event.date|date:"F d, Y H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-map-marker-alt text-primary"></i> Location</h5>
+                        <p>{{ event.location }}</p>
+                    </div>
+                </div>
+
+                <h5><i class="fas fa-info-circle text-primary"></i> Description</h5>
+                <p class="mb-4">{{ event.description|linebreaks }}</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-users text-primary"></i> Registration</h5>
+                        <div class="progress mb-2" style="height: 25px;">
+                            <div class="progress-bar {% if event.is_full %}bg-danger{% else %}bg-success{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {% widthratio event.current_participants event.max_participants 100 %}%;"
+                                 aria-valuenow="{{ event.current_participants }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="{{ event.max_participants }}">
+                                {% widthratio event.current_participants event.max_participants 100 %}%
+                            </div>
+                        </div>
+                        <p class="text-center">
+                            <strong>{{ event.current_participants }}/{{ event.max_participants }}</strong> registered
+                        </p>
+                        {% if event.is_full %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> This event is fully booked
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-info-circle"></i> {{ available_spots }} spots available
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'event-list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Events
+                </a>
+                
+                <!-- REGISTRATION BUTTONS -->
+                {% if user.is_authenticated %}
+                    {% if is_registered %}
+                    <button class="btn btn-success" disabled>
+                        <i class="fas fa-check"></i> Already Registered
+                    </button>
+                    <a href="{% url 'my-registrations' %}" class="btn btn-outline-primary">
+                        View My Registrations
+                    </a>
+                    {% else %}
+                        {% if event.is_full %}
+                        <button class="btn btn-danger" disabled>
+                            <i class="fas fa-times"></i> Event Full
+                        </button>
+                        {% else %}
+                        <a href="{% url 'register-event' event.pk %}" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Register Now
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                <a href="{% url 'login' %}?next={% url 'event-detail' event.pk %}" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Login to Register
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
