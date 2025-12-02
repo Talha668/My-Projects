@@ -1,0 +1,9 @@
+Hello team,
+
+Please contact us at support@example.com for assistance.
+You can also reach out to john.doe123@gmail.com or jane_doe@company.org for further queries.
+Our old email info@oldmail.net is no longer active.
+
+Thank you,
+Admin
+admin@website.com

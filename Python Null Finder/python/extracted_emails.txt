@@ -1,0 +1,5 @@
+admin@website.com
+info@oldmail.net
+jane_doe@company.org
+john.doe123@gmail.com
+support@example.com
